@@ -1,11 +1,10 @@
 package ru.gordeeva.controllers;
 
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import ru.gordeeva.models.Task;
 import ru.gordeeva.repository.TasksRepository;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -19,28 +18,28 @@ public class TaskController {
     }
 
     @GetMapping("/get/{id}")
-    public Task getTaskById(@PathVariable int id){
+    public Task getTaskById(@PathVariable int id) {
         Task task = tasksRepository.findById(id);
-        System.out.println(task.toString());
-    return task;
-
+        return task;
     }
 
     @PostMapping("/create")
-    public void createTask(@RequestBody Task task){
+    public void createTask(@RequestBody Task task) {
         tasksRepository.save(task);
     }
 
     @PostMapping("/edit")
-    public void editTask(@RequestBody Task task){
-        System.out.println(UUID.randomUUID().toString());
+    public void editTask(@RequestBody Task task) {
         tasksRepository.save(task);
+    }
 
-
+    @GetMapping("/all")
+    public List<Task> getAllTasks() {
+        return tasksRepository.findAll();
     }
 
     @DeleteMapping("/delete/{id}")
-    public void deleteTask(@PathVariable int id){
+    public void deleteTask(@PathVariable int id) {
         tasksRepository.deleteById(id);
     }
 
