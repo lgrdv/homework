@@ -2,8 +2,11 @@ package ru.gordeeva.controllers;
 
 import org.springframework.web.bind.annotation.*;
 import ru.gordeeva.models.Task;
+import ru.gordeeva.models.TaskDTO;
 import ru.gordeeva.repository.TasksRepository;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,7 +27,11 @@ public class TaskController {
     }
 
     @PostMapping("/create")
-    public void createTask(@RequestBody Task task) {
+    public void createTask(@RequestBody TaskDTO taskDTO) {
+        Task task = new Task();
+        LocalDateTime dateTime = convertToLocalDate(taskDTO.getDateTime());
+        task.setDateTime(dateTime);
+        task.setDescription(taskDTO.getDescription());
         tasksRepository.save(task);
     }
 
@@ -40,7 +47,13 @@ public class TaskController {
 
     @DeleteMapping("/delete/{id}")
     public void deleteTask(@PathVariable int id) {
-        tasksRepository.deleteById(id);
+        Task task = tasksRepository.findById(id);
+        tasksRepository.delete(task);
+    }
+
+    private LocalDateTime convertToLocalDate(String dateTime){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        return LocalDateTime.parse(dateTime, formatter);
     }
 
 }
