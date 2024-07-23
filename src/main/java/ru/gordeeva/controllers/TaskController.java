@@ -1,14 +1,17 @@
 package ru.gordeeva.controllers;
 
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import ru.gordeeva.models.Response;
 import ru.gordeeva.models.Task;
 import ru.gordeeva.models.TaskDTO;
 import ru.gordeeva.repository.TasksRepository;
 
+import javax.swing.*;
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/tasks")
@@ -20,10 +23,9 @@ public class TaskController {
         this.tasksRepository = tasksRepository;
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/getById/{id}")
     public Task getTaskById(@PathVariable int id) {
-        Task task = tasksRepository.findById(id);
-        return task;
+        return tasksRepository.findById(id);
     }
 
     @PostMapping("/create")
@@ -32,12 +34,24 @@ public class TaskController {
         LocalDateTime dateTime = convertToLocalDate(taskDTO.getDateTime());
         task.setDateTime(dateTime);
         task.setDescription(taskDTO.getDescription());
+        task.setStatus(false);
         tasksRepository.save(task);
     }
 
+    @PostMapping("/getByDescription")
+    public Task findByDescription(@RequestBody Task task) {
+        String description = task.getDescription();
+        return tasksRepository.findAllByDescriptionContainsIgnoreCase(description);
+    }
+
     @PostMapping("/edit")
-    public void editTask(@RequestBody Task task) {
-        tasksRepository.save(task);
+    public Response editTask(@RequestBody Task task) {
+        if (!task.isStatus()) {
+            tasksRepository.save(task);
+        } else {
+            return new Response(true, "Задача выполнена. Данные не редактируемы");
+        }
+        return new Response(false, "Данные успешно отредактированы");
     }
 
     @GetMapping("/all")
@@ -45,13 +59,13 @@ public class TaskController {
         return tasksRepository.findAll();
     }
 
-    @DeleteMapping("/delete/{id}")
-    public void deleteTask(@PathVariable int id) {
-        Task task = tasksRepository.findById(id);
-        tasksRepository.delete(task);
+    @Transactional
+    @PostMapping("/delete")
+    public void deleteTask(@RequestBody Task task) {
+        tasksRepository.deleteById(task.getId());
     }
 
-    private LocalDateTime convertToLocalDate(String dateTime){
+    private LocalDateTime convertToLocalDate(String dateTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
         return LocalDateTime.parse(dateTime, formatter);
     }
